@@ -1,5 +1,5 @@
 pipeline{
-    agent any
+    agent any 
     tools{
         jdk 'jdk17'
         nodejs 'node23'
@@ -26,13 +26,6 @@ pipeline{
                 }
             }
         }
-        stage("quality gate"){
-           steps {
-                script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token' 
-                }
-            } 
-        }
         stage('Install Dependencies') {
             steps {
                 sh "npm install"
@@ -52,7 +45,7 @@ pipeline{
         stage("Docker Build & Push"){
             steps{
                 script{
-                   withDockerRegistry(credentialsId: 'docker-creds', toolName: 'docker'){   
+                   withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){   
                        sh "docker build -t swiggy ."
                        sh "docker tag swiggy manoharmattepu/swiggy:latest "
                        sh "docker push manoharmattepu/swiggy:latest "
@@ -67,7 +60,8 @@ pipeline{
         }
         stage('Deploy to container'){
             steps{
-                sh 'docker run -d --name swiggy -p 3000:3000 manoharmattepu/swiggy:latest'
+               kubectl apply -f deployment.yml
+               kubectl apply -f service.yml
             }
         }
     }
